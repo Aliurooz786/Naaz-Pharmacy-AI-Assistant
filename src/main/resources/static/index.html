@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naaz Pharmacy AI Assistant</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #e5ddd5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .chat-container { background: white; width: 450px; height: 600px; display: flex; flex-direction: column; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); overflow: hidden; }
+
+        /* Header Updated */
+        .header { background-color: #075e54; color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .header-title { font-weight: bold; font-size: 16px; }
+        .header-actions { display: flex; gap: 5px; }
+        .btn-sm { font-size: 11px; padding: 5px 8px; border: none; border-radius: 4px; cursor: pointer; color: white; }
+        .btn-clear { background: #d32f2f; }
+        .btn-refresh { background: #f57c00; }
+        .btn-clear:hover { background: #b71c1c; }
+        .btn-refresh:hover { background: #e65100; }
+
+        /* Chat Area */
+        .messages { flex: 1; overflow-y: auto; padding: 20px; background: #efe7dd; display: flex; flex-direction: column; gap: 10px; }
+        .message { padding: 10px 15px; border-radius: 10px; max-width: 75%; font-size: 14px; line-height: 1.4; position: relative; word-wrap: break-word; }
+        .user { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 0; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .ai { background-color: white; align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid #ddd; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+        .typing { display: none; font-style: italic; color: #555; font-size: 12px; margin-left: 10px; margin-bottom: 10px; }
+
+        .input-area { padding: 15px; background: #f0f0f0; display: flex; gap: 10px; border-top: 1px solid #ddd; }
+        input { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 20px; outline: none; font-size: 14px; }
+        button.send-btn { padding: 10px 20px; background-color: #075e54; color: white; border: none; border-radius: 20px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="header">
+        <span class="header-title">💊 Naaz Pharmacy AI Assistant</span>
+        <div class="header-actions">
+            <!-- 🔄 Refresh Button Added -->
+            <button class="btn-sm btn-refresh" onclick="refreshData()" title="Update from Google Sheet">Sync 🔄</button>
+            <button class="btn-sm btn-clear" onclick="clearChat()" title="New Chat">Clear 🧹</button>
+        </div>
+    </div>
+
+    <div class="messages" id="messageBox">
+        <div class="message ai">Namaste! Main Naaz hoon. Stock ya dawa ke baare mein puchiye.</div>
+    </div>
+
+    <div class="typing" id="typingIndicator">Naaz is thinking...</div>
+
+    <div class="input-area">
+        <input type="text" id="userInput" placeholder="Dawa ka naam..." autocomplete="off">
+        <button class="send-btn" onclick="askAI()">➤</button>
+    </div>
+</div>
+
+<script>
+    let chatId = generateChatId();
+
+    function generateChatId() { return "user-" + Math.random().toString(36).substring(7); }
+
+    function clearChat() {
+        chatId = generateChatId();
+        document.getElementById("messageBox").innerHTML = `<div class="message ai">Chat cleared! Naya session shuru.</div>`;
+    }
+
+    // 🔄 Function to Trigger Refresh
+    async function refreshData() {
+        const messageBox = document.getElementById("messageBox");
+        // Show loading in chat
+        messageBox.innerHTML += `<div class="message ai">⏳ Google Sheet se data update ho raha hai...</div>`;
+
+        try {
+            const response = await fetch('/api/pharmacy/refresh', { method: 'POST' });
+            const data = await response.json();
+
+            // Show success/error
+            messageBox.innerHTML += `<div class="message ai" style="font-weight:bold;">${data.status}</div>`;
+        } catch (error) {
+            messageBox.innerHTML += `<div class="message ai" style="color:red;">Update Failed! Check logs.</div>`;
+        }
+        messageBox.scrollTop = messageBox.scrollHeight;
+    }
+
+    async function askAI() {
+        const inputField = document.getElementById("userInput");
+        const messageBox = document.getElementById("messageBox");
+        const typingIndicator = document.getElementById("typingIndicator");
+        const question = inputField.value.trim();
+
+        if (!question) return;
+
+        messageBox.innerHTML += `<div class="message user">${question}</div>`;
+        inputField.value = "";
+        messageBox.scrollTop = messageBox.scrollHeight;
+        typingIndicator.style.display = "block";
+
+        try {
+            const response = await fetch(`/api/pharmacy/search?query=${encodeURIComponent(question)}&chatId=${chatId}`);
+            const data = await response.json();
+            typingIndicator.style.display = "none";
+
+            let formattedAnswer = data.answer.replace(/\n/g, '<br>');
+            messageBox.innerHTML += `<div class="message ai">${formattedAnswer}</div>`;
+        } catch (error) {
+            typingIndicator.style.display = "none";
+            messageBox.innerHTML += `<div class="message ai" style="color:red;">Error: Server issue.</div>`;
+        }
+        messageBox.scrollTop = messageBox.scrollHeight;
+    }
+
+    document.getElementById("userInput").addEventListener("keypress", function(event) {
+        if (event.key === "Enter") askAI();
+    });
+</script>
+
+</body>
+</html>

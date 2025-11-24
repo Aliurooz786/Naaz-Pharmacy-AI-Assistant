@@ -1,0 +1,6 @@
+Item_ID,Medicine_Name,Generic_Name,Rack_Location,Stock_Quantity,Price,Expiry_Date,Usage_Description
+101,Dolo-650,Paracetamol,Rack-A1,50,30.00,2025-12-31,Used for fever and mild pain relief.
+102,Augmentin-625,Amoxicillin+Clavulanate,Rack-B3,20,150.00,2024-10-15,Antibiotic used for bacterial infections like pneumonia.
+103,Cetrizine,Cetirizine Hydrochloride,Rack-A2,100,20.00,2026-01-01,Antihistamine used for allergies and runny nose.
+104,Combiflam,Ibuprofen+Paracetamol,Rack-A1,45,40.00,2025-05-20,Pain killer used for muscle pain and headache.
+105,Pantop-40,Pantoprazole,Rack-C1,60,80.00,2025-08-10,Used for acidity and gastric issues.
